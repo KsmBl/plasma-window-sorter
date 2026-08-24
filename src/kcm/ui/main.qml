@@ -12,6 +12,8 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.iconthemes as KIconThemes
 
+import QtQuick.Dialogs as QtDialogs
+
 KCM.SimpleKCM {
     id: root
 
@@ -411,10 +413,26 @@ KCM.SimpleKCM {
                 placeholderText: i18nc("@info:placeholder", "System Monitor")
             }
 
-            QQC2.TextField {
-                id: commandLine
+            RowLayout {
                 Kirigami.FormData.label: i18nc("@label:textbox", "Command:")
-                placeholderText: i18nc("@info:placeholder", "plasma-systemmonitor")
+                spacing: Kirigami.Units.smallSpacing
+
+                QQC2.TextField {
+                    id: commandLine
+                    Layout.fillWidth: true
+                    placeholderText: i18nc("@info:placeholder", "plasma-systemmonitor")
+                }
+
+                // Picking the program from disk saves typing its path; only the
+                // parameters are left to add by hand.
+                QQC2.Button {
+                    icon.name: "document-open"
+                    display: QQC2.AbstractButton.IconOnly
+                    text: i18nc("@action:button", "Pick an application…")
+                    QQC2.ToolTip.text: text
+                    QQC2.ToolTip.visible: hovered
+                    onClicked: applicationFileDialog.open()
+                }
             }
 
             QQC2.Button {
@@ -429,6 +447,32 @@ KCM.SimpleKCM {
             id: iconChooser
             onIconNameChanged: if (iconName.length > 0) {
                 commandSheet.chosenIcon = iconName;
+            }
+        }
+
+        QtDialogs.FileDialog {
+            id: applicationFileDialog
+
+            title: i18nc("@title:window", "Pick an Application")
+            currentFolder: "file:///usr/bin"
+            nameFilters: [
+                i18nc("@item:inlistbox file filter", "Applications (*.desktop)"),
+                i18nc("@item:inlistbox file filter", "All files (*)"),
+            ]
+
+            onAccepted: {
+                const picked = kcm.customActions.describeFile(selectedFile);
+                if (!picked.command) {
+                    return;
+                }
+                // Whatever parameters are already typed survive the pick.
+                commandLine.text = kcm.customActions.withProgram(commandLine.text, picked.command);
+                if (commandName.text.length === 0 && picked.name) {
+                    commandName.text = picked.name;
+                }
+                if (picked.icon) {
+                    commandSheet.chosenIcon = picked.icon;
+                }
             }
         }
     }

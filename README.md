@@ -52,7 +52,13 @@ shape the optimal grid aims for, and a logging switch.
 **Extra entries** puts anything you like into the same menu — a system monitor,
 a terminal, a script. *Add Application…* offers everything installed, and takes
 the name, icon and command from its `.desktop` file; *Add Command…* takes a
-name, a command line and an icon of your choosing. The arrows order them, and
+name, a command line and an icon of your choosing.
+
+In *Add Command…* the button next to the command field picks a program off the
+filesystem, so the path is filled in for you and only the parameters are left
+to type. Picking a `.desktop` file there takes its `Exec` line without the
+field codes and fills in the name and icon as well. Parameters already typed
+survive picking a different program. The arrows order them, and
 they appear in the panel's context menu below the sorting entries, in their own
 group.
 

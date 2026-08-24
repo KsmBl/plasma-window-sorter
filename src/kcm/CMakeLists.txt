@@ -15,6 +15,7 @@ target_link_libraries(kcm_windowsorter PRIVATE
     Qt6::Qml
     Qt6::Quick
     KF6::ConfigGui
+    KF6::CoreAddons
     KF6::I18n
     KF6::KCMUtils
     KF6::KCMUtilsQuick

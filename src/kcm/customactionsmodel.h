@@ -7,6 +7,8 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QUrl>
+#include <QVariantMap>
 #include <QList>
 #include <QString>
 
@@ -31,6 +33,16 @@ public:
 
     /*! Takes name, icon and command straight from the .desktop file. */
     Q_INVOKABLE void addApplication(const QString &storageId);
+
+    /*!
+     * Describes a file picked from disk: a .desktop file gives its Exec line
+     * without the field codes plus its name and icon, anything else is taken
+     * as an executable. Returns name/icon/command for the dialog to fill in.
+     */
+    Q_INVOKABLE QVariantMap describeFile(const QUrl &url) const;
+
+    /*! Swaps the program of a command line, keeping the parameters after it. */
+    Q_INVOKABLE QString withProgram(const QString &command, const QString &program) const;
     Q_INVOKABLE void addCommand(const QString &name, const QString &command, const QString &icon);
     Q_INVOKABLE void update(int row, const QString &name, const QString &command, const QString &icon);
     Q_INVOKABLE void remove(int row);

@@ -9,6 +9,10 @@
 #include <KConfigGroup>
 #include <KService>
 #include <KSharedConfig>
+#include <KShell>
+
+#include <QFileInfo>
+#include <QRegularExpression>
 
 namespace
 {
@@ -84,6 +88,57 @@ void CustomActionsModel::addApplication(const QString &storageId)
 
     Q_EMIT countChanged();
     Q_EMIT changed();
+}
+
+QVariantMap CustomActionsModel::describeFile(const QUrl &url) const
+{
+    const QString path = url.isLocalFile() ? url.toLocalFile() : url.toString();
+    QVariantMap result;
+    if (path.isEmpty()) {
+        return result;
+    }
+
+    if (path.endsWith(QLatin1String(".desktop"))) {
+        const KService service(path);
+        QString exec = service.exec();
+        if (exec.isEmpty()) {
+            return result;
+        }
+        // The Exec field codes are meant for file arguments we do not pass.
+        static const QRegularExpression fieldCodes(QStringLiteral("%[uUfFickdDnNvm]"));
+        exec.remove(fieldCodes);
+        result[QStringLiteral("command")] = exec.simplified();
+        result[QStringLiteral("name")] = service.name();
+        result[QStringLiteral("icon")] = service.icon();
+        return result;
+    }
+
+    result[QStringLiteral("command")] = KShell::quoteArg(path);
+    result[QStringLiteral("name")] = QFileInfo(path).fileName();
+    result[QStringLiteral("icon")] = QStringLiteral("application-x-executable");
+    return result;
+}
+
+QString CustomActionsModel::withProgram(const QString &command, const QString &program) const
+{
+    if (program.isEmpty()) {
+        return command;
+    }
+    if (command.trimmed().isEmpty()) {
+        return program;
+    }
+
+    KShell::Errors error = KShell::NoError;
+    QStringList arguments = KShell::splitArgs(command, KShell::TildeExpand, &error);
+    if (error != KShell::NoError || arguments.isEmpty()) {
+        return program;
+    }
+
+    arguments.removeFirst();
+    if (arguments.isEmpty()) {
+        return program;
+    }
+    return program + QLatin1Char(' ') + KShell::joinArgs(arguments);
 }
 
 void CustomActionsModel::addCommand(const QString &name, const QString &command, const QString &icon)
