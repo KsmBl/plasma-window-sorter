@@ -40,6 +40,12 @@ private:
     /*! Hands the layout job to KWin, the only thing allowed to move windows on Wayland. */
     void sortWindows(const QString &mode);
 
+    /*! Rebuilds the user's own menu entries from the configuration. */
+    QList<QAction *> customActions();
+
+    /*! Starts a configured entry: a .desktop service if there is one, else a plain command. */
+    void launch(const QString &service, const QString &command);
+
     /*! Writes the parameterised KWin script for this run, returns its path. */
     QString buildScript(const QString &mode) const;
 
@@ -54,5 +60,7 @@ private:
     };
 
     QList<SortAction> m_sortActions;
+    QList<QAction *> m_customActions;
     QAction *m_separator;
+    QAction *m_customSeparator;
 };

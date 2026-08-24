@@ -18,8 +18,14 @@ K_PLUGIN_CLASS_WITH_JSON(WindowSorterKcm, "kcm_windowsorter.json")
 WindowSorterKcm::WindowSorterKcm(QObject *parent, const KPluginMetaData &metaData)
     : KQuickConfigModule(parent, metaData)
     , m_settings(new WindowSorterSettings(this))
+    , m_customActions(new CustomActionsModel(this))
+    , m_applications(new ApplicationsModel(this))
 {
     qmlRegisterAnonymousType<WindowSorterSettings>("org.kde.plasma.windowsorter", 1);
+    qmlRegisterAnonymousType<CustomActionsModel>("org.kde.plasma.windowsorter", 1);
+    qmlRegisterAnonymousType<ApplicationsModel>("org.kde.plasma.windowsorter", 1);
+
+    connect(m_customActions, &CustomActionsModel::changed, this, &WindowSorterKcm::updateNeedsSave);
 
     connect(m_settings, &WindowSorterSettings::ShowVerticalChanged, this, &WindowSorterKcm::updateNeedsSave);
     connect(m_settings, &WindowSorterSettings::ShowHorizontalChanged, this, &WindowSorterKcm::updateNeedsSave);
@@ -35,15 +41,27 @@ WindowSorterSettings *WindowSorterKcm::settings() const
     return m_settings;
 }
 
+CustomActionsModel *WindowSorterKcm::customActions() const
+{
+    return m_customActions;
+}
+
+ApplicationsModel *WindowSorterKcm::applications() const
+{
+    return m_applications;
+}
+
 void WindowSorterKcm::load()
 {
     m_settings->load();
+    m_customActions->load();
     updateNeedsSave();
 }
 
 void WindowSorterKcm::save()
 {
     m_settings->save();
+    m_customActions->save();
     setNeedsSave(false);
 }
 
@@ -55,8 +73,8 @@ void WindowSorterKcm::defaults()
 
 void WindowSorterKcm::updateNeedsSave()
 {
-    setNeedsSave(m_settings->isSaveNeeded());
-    setRepresentsDefaults(m_settings->isDefaults());
+    setNeedsSave(m_settings->isSaveNeeded() || m_customActions->isSaveNeeded());
+    setRepresentsDefaults(m_settings->isDefaults() && m_customActions->isDefaults());
 }
 
 #include "kcm.moc"

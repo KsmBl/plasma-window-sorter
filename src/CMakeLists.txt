@@ -21,7 +21,7 @@ include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMQmlModule)
 
 find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core DBus Gui Qml Quick)
-find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Config CoreAddons I18n KCMUtils)
+find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Config CoreAddons I18n KCMUtils KIO Service)
 find_package(Plasma REQUIRED)
 
 # Same applet id, same QML module URI and same QML sources as the distribution
@@ -69,6 +69,8 @@ target_link_libraries(org.kde.panel PRIVATE
     KF6::CoreAddons
     KF6::ConfigCore
     KF6::I18n
+    KF6::KIOGui
+    KF6::Service
     Plasma::Plasma
 )
 

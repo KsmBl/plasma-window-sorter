@@ -47,6 +47,19 @@ from it. With all four off the menu looks exactly as it did before. The page
 also holds whether minimized windows get pulled back into the layout, the cell
 shape the optimal grid aims for, and a logging switch.
 
+### Your own entries
+
+**Extra entries** puts anything you like into the same menu — a system monitor,
+a terminal, a script. *Add Application…* offers everything installed, and takes
+the name, icon and command from its `.desktop` file; *Add Command…* takes a
+name, a command line and an icon of your choosing. The arrows order them, and
+they appear in the panel's context menu below the sorting entries, in their own
+group.
+
+Entries added from the application list are started through their `.desktop`
+service, so they get the working directory, environment and startup feedback
+the application expects; typed commands are run as given.
+
 Everything lives in `~/.config/plasma-window-sorterrc`, and the panel re-reads
 it every time the menu opens, so nothing needs restarting either way:
 
@@ -59,6 +72,15 @@ ShowCascade=true
 IncludeMinimized=false
 TargetAspect=1.3333333
 Debug=false
+
+[CustomActions]
+Count=1
+
+[CustomActions][0]
+Name=System Monitor
+Icon=utilities-system-monitor
+Command=plasma-systemmonitor
+Service=org.kde.plasma-systemmonitor.desktop
 ```
 
 ## From the shell
@@ -121,7 +143,9 @@ src/panelsorter.{h,cpp}   the containment subclass (the actual patch)
 src/CMakeLists.txt        builds org.kde.panel.so from staged upstream QML + our class
 src/kcm/                  System Settings module (KQuickConfigModule + QML)
   kcm.{h,cpp}             loads and saves the settings
-  *.kcfg / *.kcfgc        the settings themselves, generated into C++
+  customactionsmodel.*    the user's own menu entries
+  applicationsmodel.*     installed applications, for the picker
+  *.kcfg / *.kcfgc        the built-in settings, generated into C++
   ui/main.qml             the page you see in System Settings
 kwin/sorter.js            the layout engine that runs inside KWin
 upstream/<version>/       upstream panel QML, vendored as an offline fallback

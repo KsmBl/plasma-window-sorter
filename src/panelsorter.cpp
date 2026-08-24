@@ -21,7 +21,10 @@
 #include <QTimer>
 
 #include <KConfigGroup>
+#include <KIO/ApplicationLauncherJob>
+#include <KIO/CommandLauncherJob>
 #include <KLocalizedString>
+#include <KService>
 #include <KPluginFactory>
 #include <KSharedConfig>
 
@@ -52,6 +55,8 @@ PanelSorter::PanelSorter(QObject *parent, const KPluginMetaData &data, const QVa
 {
     m_separator = new QAction(this);
     m_separator->setSeparator(true);
+    m_customSeparator = new QAction(this);
+    m_customSeparator->setSeparator(true);
 
     m_sortActions = {
         {QStringLiteral("ShowVertical"),
@@ -111,7 +116,66 @@ QList<QAction *> PanelSorter::contextualActions()
         actions << m_separator;
         actions << enabled;
     }
+
+    const QList<QAction *> custom = customActions();
+    if (!custom.isEmpty()) {
+        actions << m_customSeparator;
+        actions << custom;
+    }
+
     return actions;
+}
+
+QList<QAction *> PanelSorter::customActions()
+{
+    // The menu is rebuilt from scratch every time it opens, and so are these:
+    // the old ones belong to a menu that is already gone.
+    for (QAction *action : std::as_const(m_customActions)) {
+        action->deleteLater();
+    }
+    m_customActions.clear();
+
+    KSharedConfig::Ptr file = KSharedConfig::openConfig(QStringLiteral("plasma-window-sorterrc"));
+    file->reparseConfiguration();
+    const KConfigGroup group = file->group(QStringLiteral("CustomActions"));
+    const int count = group.readEntry("Count", 0);
+
+    for (int i = 0; i < count; ++i) {
+        const KConfigGroup entry = group.group(QString::number(i));
+        const QString name = entry.readEntry("Name", QString());
+        const QString command = entry.readEntry("Command", QString());
+        const QString service = entry.readEntry("Service", QString());
+        if (name.isEmpty() || (command.isEmpty() && service.isEmpty())) {
+            continue;
+        }
+
+        auto *action = new QAction(QIcon::fromTheme(entry.readEntry("Icon", QStringLiteral("application-x-executable"))), name, this);
+        action->setObjectName(QStringLiteral("customaction_%1").arg(i));
+        connect(action, &QAction::triggered, this, [this, service, command] {
+            launch(service, command);
+        });
+        m_customActions << action;
+    }
+
+    return m_customActions;
+}
+
+void PanelSorter::launch(const QString &service, const QString &command)
+{
+    // A .desktop file carries the working directory, environment and startup
+    // notification the application expects, so prefer it over the raw command.
+    if (!service.isEmpty()) {
+        if (const KService::Ptr found = KService::serviceByStorageId(service)) {
+            auto *job = new KIO::ApplicationLauncherJob(found, this);
+            job->start();
+            return;
+        }
+    }
+
+    if (!command.isEmpty()) {
+        auto *job = new KIO::CommandLauncherJob(command, this);
+        job->start();
+    }
 }
 
 QString PanelSorter::buildScript(const QString &mode) const
