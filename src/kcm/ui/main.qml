@@ -455,9 +455,11 @@ KCM.SimpleKCM {
 
             title: i18nc("@title:window", "Pick an Application")
             currentFolder: "file:///usr/bin"
+            // All files first: it is the default, and /usr/bin is full of
+            // binaries without an extension that a *.desktop filter hides.
             nameFilters: [
-                i18nc("@item:inlistbox file filter", "Applications (*.desktop)"),
                 i18nc("@item:inlistbox file filter", "All files (*)"),
+                i18nc("@item:inlistbox file filter", "Application launchers (*.desktop)"),
             ]
 
             onAccepted: {
