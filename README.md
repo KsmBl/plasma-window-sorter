@@ -27,7 +27,7 @@ Works on Wayland and X11 (Plasma 6.7, tested on 6.7.4 / Arch).
 file. Useful flags:
 
 ```
---include-minimized   also un-minimize and tile minimized windows
+--include-minimized   also un-minimize and tile minimized windows (also in the settings page)
 --debug               log every sort to the journal (journalctl --user -b | grep plasma-window-sorter)
 --aspect 1.6          preferred cell shape for "Optimal" (default 1.3333 = 4:3)
 --no-restart          leave plasmashell alone
@@ -35,11 +35,27 @@ file. Useful flags:
 --offline             build from the vendored QML instead of downloading
 ```
 
-The same settings live in `~/.config/plasma-window-sorterrc` and are read on
-every sort, so they can be changed without rebuilding:
+## Settings
+
+**System Settings → Window Management → Window Sorting** (or `kcmshell6
+kcm_windowsorter`), installed alongside the panel:
+
+<img src="doc/settings.png" alt="The Window Sorting page in System Settings" width="560">
+
+Tick the entries you actually want in the panel menu — the others disappear
+from it. With all four off the menu looks exactly as it did before. The page
+also holds whether minimized windows get pulled back into the layout, the cell
+shape the optimal grid aims for, and a logging switch.
+
+Everything lives in `~/.config/plasma-window-sorterrc`, and the panel re-reads
+it every time the menu opens, so nothing needs restarting either way:
 
 ```ini
 [General]
+ShowVertical=true
+ShowHorizontal=true
+ShowOptimal=true
+ShowCascade=true
 IncludeMinimized=false
 TargetAspect=1.3333333
 Debug=false
@@ -103,11 +119,19 @@ respected.
 ```
 src/panelsorter.{h,cpp}   the containment subclass (the actual patch)
 src/CMakeLists.txt        builds org.kde.panel.so from staged upstream QML + our class
+src/kcm/                  System Settings module (KQuickConfigModule + QML)
+  kcm.{h,cpp}             loads and saves the settings
+  *.kcfg / *.kcfgc        the settings themselves, generated into C++
+  ui/main.qml             the page you see in System Settings
 kwin/sorter.js            the layout engine that runs inside KWin
 upstream/<version>/       upstream panel QML, vendored as an offline fallback
 tools/sort.sh             trigger a sort from the shell
+doc/                      the images in this file
 install.sh / uninstall.sh
 ```
+
+`install.sh` puts two files in place: the replacement `org.kde.panel.so` and
+`plasma/kcms/systemsettings/kcm_windowsorter.so` for the settings page.
 
 `install.sh` downloads the panel QML matching your installed Plasma from
 invent.kde.org, so a Plasma upgrade only needs a re-run, not a code change. If

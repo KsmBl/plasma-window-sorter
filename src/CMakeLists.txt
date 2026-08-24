@@ -20,8 +20,8 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMQmlModule)
 
-find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Quick DBus)
-find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS CoreAddons Config I18n)
+find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core DBus Gui Qml Quick)
+find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Config CoreAddons I18n KCMUtils)
 find_package(Plasma REQUIRED)
 
 # Same applet id, same QML module URI and same QML sources as the distribution
@@ -71,3 +71,9 @@ target_link_libraries(org.kde.panel PRIVATE
     KF6::I18n
     Plasma::Plasma
 )
+
+# System Settings module: Window Management -> Window Sorting.
+# Staged next to this file by install.sh; skipped when building the panel alone.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/kcm/CMakeLists.txt")
+    add_subdirectory(kcm)
+endif()

@@ -1,0 +1,6 @@
+File=windowsortersettings.kcfg
+ClassName=WindowSorterSettings
+Mutators=true
+DefaultValueGetters=true
+GenerateProperties=true
+ParentInConstructor=true

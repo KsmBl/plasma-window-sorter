@@ -8,6 +8,8 @@ set -euo pipefail
 
 PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DATA_DIR="/usr/share/plasma-window-sorter"
+KCM_DIR="/usr/lib/qt6/plugins/plasma/kcms/systemsettings"
+KCM_NAME="kcm_windowsorter"
 BACKUP_DIR="/var/lib/plasma-window-sorter"
 HOOK_FILE="/etc/pacman.d/hooks/95-plasma-window-sorter.hook"
 MARKER="plasma-window-sorter "
@@ -51,6 +53,7 @@ fi
 
 msg "Removing our files ..."
 sudo rm -rf "$DATA_DIR" "$BACKUP_DIR"
+sudo rm -f "$KCM_DIR/$KCM_NAME.so" "/usr/share/applications/$KCM_NAME.desktop"
 sudo rm -f "$HOOK_FILE"
 rm -f "$HOME/.local/lib/qt6/plugins/plasma/applets/org.kde.panel.so"
 rm -f "$HOME/.local/share/plasma-window-sorter/sorter.js"

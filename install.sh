@@ -14,6 +14,8 @@ PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
 STAGE_DIR="$BUILD_DIR/stage"
 DATA_DIR="/usr/share/plasma-window-sorter"
+KCM_DIR="/usr/lib/qt6/plugins/plasma/kcms/systemsettings"
+KCM_NAME="kcm_windowsorter"
 BACKUP_DIR="/var/lib/plasma-window-sorter"
 HOOK_FILE="/etc/pacman.d/hooks/95-plasma-window-sorter.hook"
 MARKER="plasma-window-sorter "
@@ -146,6 +148,7 @@ mkdir -p "$STAGE_DIR"
 cp "$UPSTREAM_DIR"/* "$STAGE_DIR"/
 for s in "${SKIP_FILES[@]}"; do rm -f "$STAGE_DIR/$s"; done
 cp "$PROJECT_DIR/src/CMakeLists.txt" "$PROJECT_DIR/src/panelsorter.cpp" "$PROJECT_DIR/src/panelsorter.h" "$STAGE_DIR"/
+cp -r "$PROJECT_DIR/src/kcm" "$STAGE_DIR"/
 
 msg "Building ..."
 BUILD_LOG="$BUILD_DIR/build.log"
@@ -163,7 +166,11 @@ fi
 BUILT_SO="$(find "$BUILD_DIR/cmake" -name 'org.kde.panel.so' -type f | head -1)"
 [[ -n $BUILT_SO ]] || die "build produced no org.kde.panel.so."
 grep -aq "$MARKER" "$BUILT_SO" || die "built plugin lacks the build marker - refusing to install it."
+BUILT_KCM="$(find "$BUILD_DIR/cmake" -name "$KCM_NAME.so" -type f | head -1)"
+[[ -n $BUILT_KCM ]] || die "build produced no $KCM_NAME.so."
+BUILT_KCM_DESKTOP="$(find "$BUILD_DIR/cmake" -name "$KCM_NAME.desktop" -type f | head -1)"
 msg "Built $BUILT_SO"
+msg "Built $BUILT_KCM"
 
 # --- back up the distribution's panel ----------------------------------------
 sudo mkdir -p "$BACKUP_DIR" "$DATA_DIR"
@@ -185,6 +192,17 @@ TMP_SO="$(dirname "$TARGET_SO")/.org.kde.panel.so.pws-incoming"
 sudo install -Dm755 "$BUILT_SO" "$TMP_SO"
 sudo mv -f "$TMP_SO" "$TARGET_SO"
 sudo install -Dm644 "$PROJECT_DIR/kwin/sorter.js" "$DATA_DIR/sorter.js"
+
+# System Settings module: Window Management -> Window Sorting
+msg "Installing the settings module to $KCM_DIR/$KCM_NAME.so ..."
+sudo install -d "$KCM_DIR"
+sudo install -Dm755 "$BUILT_KCM" "$KCM_DIR/.$KCM_NAME.so.incoming"
+sudo mv -f "$KCM_DIR/.$KCM_NAME.so.incoming" "$KCM_DIR/$KCM_NAME.so"
+if [[ -n ${BUILT_KCM_DESKTOP:-} ]]; then
+    # Lets KRunner and the application launcher find the page by name.
+    sudo install -Dm644 "$BUILT_KCM_DESKTOP" "/usr/share/applications/$KCM_NAME.desktop"
+    sudo update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
 
 # Behaviour lives in a plain config file, so it can be changed without rebuilding.
 if [[ -n $include_minimized ]]; then
@@ -249,6 +267,10 @@ you now have:
     Sort Windows Horizontally    full-height columns
     Sort Windows Optimally       even grid
     Sort Windows Cascading       one offset pile, equal sizes
+
+Pick which of those the menu offers, and the rest of the behaviour, in
+System Settings -> Window Management -> Window Sorting
+(or run: kcmshell6 kcm_windowsorter)
 
 To undo everything: $PROJECT_DIR/uninstall.sh
 EOF

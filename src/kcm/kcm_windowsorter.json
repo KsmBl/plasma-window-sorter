@@ -1,0 +1,13 @@
+{
+    "KPlugin": {
+        "Description": "Choose which window sorting entries the panel menu offers",
+        "FormFactors": [
+            "desktop"
+        ],
+        "Icon": "view-grid",
+        "Name": "Window Sorting"
+    },
+    "X-KDE-Keywords": "window,sort,sorting,tile,tiling,grid,cascade,panel,menu,arrange,layout",
+    "X-KDE-System-Settings-Parent-Category": "windowmanagement",
+    "X-KDE-Weight": 65
+}

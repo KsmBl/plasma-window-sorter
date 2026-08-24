@@ -50,22 +50,36 @@ extern "C" Q_DECL_EXPORT const char plasma_window_sorter_version[] = "plasma-win
 PanelSorter::PanelSorter(QObject *parent, const KPluginMetaData &data, const QVariantList &args)
     : Plasma::Containment(parent, data, args)
 {
-    auto *separator = new QAction(this);
-    separator->setSeparator(true);
-    m_contextualActions << separator;
+    m_separator = new QAction(this);
+    m_separator->setSeparator(true);
 
-    m_contextualActions << createSortAction(QStringLiteral("vertical"),
-                                            i18nc("@action:inmenu panel context menu", "Sort Windows Vertically"),
-                                            QStringLiteral("view-split-top-bottom"));
-    m_contextualActions << createSortAction(QStringLiteral("horizontal"),
-                                            i18nc("@action:inmenu panel context menu", "Sort Windows Horizontally"),
-                                            QStringLiteral("view-split-left-right"));
-    m_contextualActions << createSortAction(QStringLiteral("optimal"),
-                                            i18nc("@action:inmenu panel context menu", "Sort Windows Optimally"),
-                                            QStringLiteral("view-grid"));
-    m_contextualActions << createSortAction(QStringLiteral("cascade"),
-                                            i18nc("@action:inmenu panel context menu", "Sort Windows Cascading"),
-                                            QStringLiteral("window-duplicate"));
+    m_sortActions = {
+        {QStringLiteral("ShowVertical"),
+         createSortAction(QStringLiteral("vertical"),
+                          i18nc("@action:inmenu panel context menu", "Sort Windows Vertically"),
+                          QStringLiteral("view-split-top-bottom"))},
+        {QStringLiteral("ShowHorizontal"),
+         createSortAction(QStringLiteral("horizontal"),
+                          i18nc("@action:inmenu panel context menu", "Sort Windows Horizontally"),
+                          QStringLiteral("view-split-left-right"))},
+        {QStringLiteral("ShowOptimal"),
+         createSortAction(QStringLiteral("optimal"),
+                          i18nc("@action:inmenu panel context menu", "Sort Windows Optimally"),
+                          QStringLiteral("view-grid"))},
+        {QStringLiteral("ShowCascade"),
+         createSortAction(QStringLiteral("cascade"),
+                          i18nc("@action:inmenu panel context menu", "Sort Windows Cascading"),
+                          QStringLiteral("window-duplicate"))},
+    };
+}
+
+KConfigGroup PanelSorter::settings()
+{
+    // Re-read every time: the settings module writes this file from another
+    // process, and these paths run rarely enough for the cost not to matter.
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("plasma-window-sorterrc"));
+    config->reparseConfiguration();
+    return config->group(QStringLiteral("General"));
 }
 
 PanelSorter::~PanelSorter() = default;
@@ -83,7 +97,20 @@ QAction *PanelSorter::createSortAction(const QString &mode, const QString &text,
 QList<QAction *> PanelSorter::contextualActions()
 {
     QList<QAction *> actions = Plasma::Containment::contextualActions();
-    actions << m_contextualActions;
+
+    const KConfigGroup config = settings();
+    QList<QAction *> enabled;
+    for (const SortAction &entry : std::as_const(m_sortActions)) {
+        if (config.readEntry(entry.configKey, true)) {
+            enabled << entry.action;
+        }
+    }
+
+    // No separator when every entry has been switched off in the settings.
+    if (!enabled.isEmpty()) {
+        actions << m_separator;
+        actions << enabled;
+    }
     return actions;
 }
 
@@ -102,7 +129,7 @@ QString PanelSorter::buildScript(const QString &mode) const
     }
     const QByteArray body = library.readAll();
 
-    const KConfigGroup config = KSharedConfig::openConfig(QStringLiteral("plasma-window-sorterrc"))->group(QStringLiteral("General"));
+    const KConfigGroup config = settings();
     const bool includeMinimized = config.readEntry("IncludeMinimized", false);
     const double targetAspect = config.readEntry("TargetAspect", 4.0 / 3.0);
     const bool debug = config.readEntry("Debug", false);

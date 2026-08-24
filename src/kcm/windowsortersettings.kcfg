@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name="plasma-window-sorterrc" />
+  <group name="General">
+    <entry name="ShowVertical" type="Bool">
+      <label>Offer "Sort Windows Vertically" in the panel menu</label>
+      <default>true</default>
+    </entry>
+    <entry name="ShowHorizontal" type="Bool">
+      <label>Offer "Sort Windows Horizontally" in the panel menu</label>
+      <default>true</default>
+    </entry>
+    <entry name="ShowOptimal" type="Bool">
+      <label>Offer "Sort Windows Optimally" in the panel menu</label>
+      <default>true</default>
+    </entry>
+    <entry name="ShowCascade" type="Bool">
+      <label>Offer "Sort Windows Cascading" in the panel menu</label>
+      <default>true</default>
+    </entry>
+    <entry name="IncludeMinimized" type="Bool">
+      <label>Restore and arrange minimized windows as well</label>
+      <default>false</default>
+    </entry>
+    <entry name="TargetAspect" type="Double">
+      <label>Cell shape the optimal grid aims for, width divided by height</label>
+      <default>1.3333333</default>
+      <min>0.5</min>
+      <max>3.0</max>
+    </entry>
+    <entry name="Debug" type="Bool">
+      <label>Log every sort to the system journal</label>
+      <default>false</default>
+    </entry>
+  </group>
+</kcfg>

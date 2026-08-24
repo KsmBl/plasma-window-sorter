@@ -12,6 +12,8 @@
 
 #include <Plasma/Containment>
 
+#include <KConfigGroup>
+
 #include <QList>
 #include <QString>
 
@@ -41,5 +43,16 @@ private:
     /*! Writes the parameterised KWin script for this run, returns its path. */
     QString buildScript(const QString &mode) const;
 
-    QList<QAction *> m_contextualActions;
+    /*! The settings group, re-read from disk on each access. */
+    static KConfigGroup settings();
+
+    /*! One menu entry, with the settings key that decides whether it is shown. */
+    struct SortAction
+    {
+        QString configKey;
+        QAction *action;
+    };
+
+    QList<SortAction> m_sortActions;
+    QAction *m_separator;
 };
